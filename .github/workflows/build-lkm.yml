@@ -1,39 +1,38 @@
 name: Build LKM for KernelSU
+
 on:
-  workflow_call:
-    inputs:
-      package_name:
-        description: 'package name of manager'
-        required: false
-        default: ''
-        type: string
-      expected_size:
-        description: 'expected signature size'
-        required: false
-        default: ''
-        type: string
-      expected_hash:
-        description: 'expected signature hash'
-        required: false
-        default: ''
-        type: string
   workflow_dispatch:
+    inputs:
+      kmi:
+        description: 'KMI版本，例如 6.12-android16'
+        required: true
+        default: '6.12-android16'
+        type: string
+
 jobs:
-  build-lkm:
+  build:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        kmi:
-          - android12-5.10
-          - android13-5.10
-          - android13-5.15
-          - android14-5.15
-          - android14-6.1
-          - android15-6.6
-          - android16-6.12
-          - android17-6.18
-    uses: ./.github/workflows/ddk-lkm.yml
-    with:
-      kmi: ${{ matrix.kmi }}
-      package_name: ${{ inputs.package_name || '' }}
-      expected_size: ${{ inputs.expected_size || '' }}
-      expected_hash: ${{ inputs.expected_hash || '' }}
+        kmi: [ ${{ github.event.inputs.kmi }} ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build LKM
+        run: |
+          chmod +x scripts/build-lkm.sh
+          ./scripts/build-lkm.sh ${{ matrix.kmi }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernelsu-${{ matrix.kmi }}
+          path: out/**/*.ko
