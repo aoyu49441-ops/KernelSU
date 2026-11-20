@@ -1,36 +1,36 @@
-name: Build KernelSU Kernel Module
-
+name: Build KernelSU LKM
 on:
   workflow_dispatch:
     inputs:
       kmi:
-        description: KMI version
+        description: KMI (例如 6.12-android16)
         required: true
         default: 6.12-android16
       ddk_release:
-        description: DDK release version
+        description: DDK 版本
         required: true
         default: 20260828
-      package_name:
-        description: package name of kernel
-        required: false
-      expected_size:
-        description: expected signature size
-        required: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/ylarod/ddk-min:${{ inputs.ddk_release }}
     steps:
       - name: Checkout KernelSU
         uses: actions/checkout@v4
 
+      - name: Download Android DDK
+        run: |
+          set -e
+          DDK_VER=${{ inputs.ddk_release }}
+          wget -q https://dl.google.com/android/ddk/${DDK_VER}/ddk-linux-x86_64-${DDK_VER}.zip
+          unzip -q ddk-linux-x86_64-${DDK_VER}.zip
+          echo "DDK_ROOT=$PWD/ddk-${DDK_VER}" >> $GITHUB_ENV
+
       - name: Build LKM
         run: |
-          make -C kernel KMI=${{ inputs.kmi }} PACKAGE_NAME=${{ inputs.package_name }} EXPECTED_SIZE=${{ inputs.expected_size }}
+          make -C kernel KMI=${{ inputs.kmi }} DDK=${{ env.DDK_ROOT }}
 
-      - name: Upload artifact
+      - name: Upload ko
         uses: actions/upload-artifact@v4
         with:
           name: kernelsu-lkm-${{ inputs.kmi }}
