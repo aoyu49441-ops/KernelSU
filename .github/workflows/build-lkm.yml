@@ -1,5 +1,4 @@
 name: Build LKM for KernelSU
-
 on:
   workflow_dispatch:
     inputs:
@@ -8,14 +7,13 @@ on:
         required: true
         default: '6.12-android16'
         type: string
-
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        kmi: [ ${{ github.event.inputs.kmi }} ]
+        kmi: [${{ github.event.inputs.kmi }}]
     container:
       image: ghcr.io/ylarod/ddk-min:latest
     steps:
@@ -23,12 +21,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Build LKM
         run: |
           chmod +x scripts/build-lkm.sh
           ./scripts/build-lkm.sh ${{ matrix.kmi }}
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
