@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build with Android DDK
-        uses: kernelsu/action-ddk-build@main
+        uses: tiann/action-ddk-build@main
         with:
           kmi: ${{ inputs.kmi }}
           ddk_release: ${{ inputs.ddk_release }}
