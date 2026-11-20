@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       kmi:
-        description: 'KMI版本，例如 6.12-android16'
+        description: 'KMI，例如 6.12-android16'
         required: true
         default: '6.12-android16'
         type: string
@@ -13,25 +13,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         kmi: [ ${{ github.event.inputs.kmi }} ]
+    container:
+      image: ghcr.io/ylarod/ddk-min:latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
 
       - name: Build LKM
         run: |
           chmod +x scripts/build-lkm.sh
           ./scripts/build-lkm.sh ${{ matrix.kmi }}
 
-      - name: Upload Artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: kernelsu-${{ matrix.kmi }}
